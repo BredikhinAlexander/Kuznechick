@@ -7,10 +7,10 @@
 
 using namespace std;
 
-// длина блока в кузнечики 16 байт
+// длина блока в алгоритме кузнечик = 16 байт
 const int block_len = 16;
 
-// матрица для линейного преобразования
+// матрица для нелинейного преобразования
 const uint8_t S[256]  = {
     252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77, 233, 119, 240, 219,
     147, 46, 153, 186, 23, 54, 241, 187, 20, 205, 95, 193, 249, 24, 101, 90, 226, 92, 239, 33, 129,
@@ -225,6 +225,7 @@ void generate(const uint8_t key[32], uint8_t round_keys[10][block_len]) {
     memcpy(round_keys[0], key + (uint8_t) block_len, block_len);
     memcpy(round_keys[1], key, block_len);
 
+    // сеть Фейстеля
     for (uint8_t i = 1; i < 5;  ++i) {
         uint8_t left[block_len] = {};
         uint8_t right[block_len] = {};
@@ -233,7 +234,6 @@ void generate(const uint8_t key[32], uint8_t round_keys[10][block_len]) {
         memcpy(left, round_keys[2 * (i - 1)], block_len);
         memcpy(right, round_keys[2 * (i - 1) + 1], block_len);
 
-        // сеть Фейстеля
         for (uint8_t j = 0; j < 8;  ++j) {
             for (uint8_t k = 0; k < block_len;  ++k) {
                 new_left[k] = S[(left[k] ^ round_constants[(i-1) * 8 + j][k])];
@@ -331,8 +331,8 @@ int main() {
     // создаю 200 MB данных
     auto data = new uint8_t[6400 * 2048][16];
     auto test = new uint8_t[6400 * 2048][16];
-    memset(data, (uint8_t) 1, 6400 * 2048 * 16);
-    memset(test, (uint8_t) 1, 6400 * 2048 * 16);
+    memset(data, (uint8_t) 0, 6400 * 2048 * 16);
+    memset(test, (uint8_t) 0, 6400 * 2048 * 16);
 
     cout << "Старт кодирования\n";
     chrono::steady_clock::time_point begin = chrono::steady_clock::now();
@@ -344,12 +344,12 @@ int main() {
     chrono::steady_clock::time_point end = chrono::steady_clock::now();
     cout << "Кодирование заняло = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "[ms]" << endl;
     
-    // for (size_t i = 0; i < 1; ++i) {
-    //     for (size_t k = 0; k < 16; ++k) {
-    //         cout << (int)data[i][k] << " " << (int)test[i][k] << endl;
-    //     }
-    // }
-    // cout << endl;
+    for (size_t i = 0; i < 1; ++i) {
+        for (size_t k = 0; k < 16; ++k) {
+            cout << (int)data[i][k] << endl;
+        }
+    }
+    cout << endl;
 
     // проверим корректности
     for (size_t i = 0; i < 6400 * 2048; ++i) {
